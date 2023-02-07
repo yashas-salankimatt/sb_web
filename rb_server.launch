@@ -1,0 +1,42 @@
+<launch>
+  <arg name="port" default="443" />
+  <arg name="address" default="" />
+  <arg name="ssl" default="true" />
+  <arg name="certfile" default="/home/yashas/Documents/scratch/sb_web/cert.pem"/>
+  <arg name="keyfile" default="/home/yashas/Documents/scratch/sb_web/key.pem" />
+
+  <arg name="retry_startup_delay" default="5" />
+
+  <arg name="fragment_timeout" default="600" />
+  <arg name="delay_between_messages" default="0" />
+  <arg name="max_message_size" default="None" />
+
+  <arg name="authenticate" default="false" />
+
+  <group if="$(arg ssl)">
+    <node name="rosbridge_websocket" pkg="rosbridge_server" type="rosbridge_websocket" output="screen">
+      <param name="certfile" value="/home/yashas/Documents/scratch/sb_web/cert.pem" />
+      <param name="keyfile" value="/home/yashas/Documents/scratch/sb_web/key.pem" />
+      <param name="authenticate" value="false" />
+      <param name="port" value="9090"/>
+      <param name="address" value="10.0.0.7"/>
+      <param name="retry_startup_delay" value="$(arg retry_startup_delay)"/>
+      <param name="fragment_timeout" value="$(arg fragment_timeout)"/>
+      <param name="delay_between_messages" value="$(arg delay_between_messages)"/>
+      <param name="max_message_size" value="$(arg max_message_size)"/>
+    </node>
+  </group>
+  <group unless="$(arg ssl)">
+    <node name="rosbridge_websocket" pkg="rosbridge_server" type="rosbridge_websocket" output="screen">
+      <param name="authenticate" value="$(arg authenticate)" />
+      <param name="port" value="9090"/>
+      <param name="address" value="10.0.0.7"/>
+      <param name="retry_startup_delay" value="$(arg retry_startup_delay)"/>
+      <param name="fragment_timeout" value="$(arg fragment_timeout)"/>
+      <param name="delay_between_messages" value="$(arg delay_between_messages)"/>
+      <param name="max_message_size" value="$(arg max_message_size)"/>
+    </node>
+  </group>
+
+  <node name="rosapi" pkg="rosapi" type="rosapi_node" />
+</launch>

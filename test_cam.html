@@ -62,7 +62,7 @@
 
 			// setup connection to the ROS server and prepare the topic
 			var ros = new ROSLIB.Ros({
-				url: "ws://10.0.0.7:9090",
+				url: "wss://10.0.0.7:9090",
 			});
 
 			ros.on("connection", function () {
@@ -167,6 +167,7 @@
 					recorder.connect(audioCtx.destination);
 				} catch (err) {
 					console.log("The following error occurred: " + err.name);
+					console.error(err);
 				}
 			}
 
