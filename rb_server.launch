@@ -1,9 +1,9 @@
 <launch>
-  <arg name="port" default="9090" />
-  <arg name="address" default="" />
+  <arg name="port" default="9093" />
+  <arg name="address" default="10.0.0.12" />
   <arg name="ssl" default="true" />
-  <arg name="certfile" default="/home/yashas/Documents/scratch/sb_web/cert.pem"/>
-  <arg name="keyfile" default="/home/yashas/Documents/scratch/sb_web/key.pem" />
+  <arg name="certfile" default="/home/yashas/Documents/tamu/sb_ros/src/sb_web/cert.pem"/>
+  <arg name="keyfile" default="/home/yashas/Documents/tamu/sb_ros/src/sb_web/key.pem" />
 
   <arg name="retry_startup_delay" default="5" />
 
@@ -15,11 +15,11 @@
 
   <group if="$(arg ssl)">
     <node name="rosbridge_websocket" pkg="rosbridge_server" type="rosbridge_websocket" output="screen">
-      <param name="certfile" value="/home/yashas/Documents/scratch/sb_web/cert.pem" />
-      <param name="keyfile" value="/home/yashas/Documents/scratch/sb_web/key.pem" />
-      <param name="authenticate" value="false" />
-      <param name="port" value="9090"/>
-      <param name="address" value="10.0.0.7"/>
+      <param name="certfile" value="$(arg certfile)" />
+      <param name="keyfile" value="$(arg keyfile)" />
+      <param name="authenticate" value="$(arg authenticate)" />
+      <param name="port" value="$(arg port)"/>
+      <param name="address" value="$(arg address)"/>
       <param name="retry_startup_delay" value="$(arg retry_startup_delay)"/>
       <param name="fragment_timeout" value="$(arg fragment_timeout)"/>
       <param name="delay_between_messages" value="$(arg delay_between_messages)"/>
@@ -29,8 +29,8 @@
   <group unless="$(arg ssl)">
     <node name="rosbridge_websocket" pkg="rosbridge_server" type="rosbridge_websocket" output="screen">
       <param name="authenticate" value="$(arg authenticate)" />
-      <param name="port" value="9090"/>
-      <param name="address" value="10.0.0.7"/>
+      <param name="port" value="$(arg port)"/>
+      <param name="address" value="$(arg address)"/>
       <param name="retry_startup_delay" value="$(arg retry_startup_delay)"/>
       <param name="fragment_timeout" value="$(arg fragment_timeout)"/>
       <param name="delay_between_messages" value="$(arg delay_between_messages)"/>
