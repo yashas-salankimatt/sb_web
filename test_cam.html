@@ -11,103 +11,22 @@
 			var RECORD_OFF =
 				"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyBAMAAADsEZWCAAAAFVBMVEVvcm0AAAAzMzNmZmbMzMyZmZn///8pcdebAAAAAXRSTlMAQObYZgAAAAFiS0dEAIgFHUgAAAAJcEhZcwAACxMAAAsTAQCanBgAAAAHdElNRQffCBINBR5qfIr6AAABv0lEQVQ4y22UQZaCMAyGffo8QED3Q9E9EDmAYzrrgZIbzJv7H2GStFLLmA22H/+fWNLsdi/hd2+DeSHP/A6Qhg9duX/AhVJskAGPoyLsNmACjVrQkMFe3u0hxUKPj5W0BqoWh0YeSxbtb2o1xvyNGPqnCMkLYPr6/SEOABcKqeKbF8mV2UE1KgHysbyDStaQTCKKR8GpYHDoIJVuJ3hcyJZVK1ZanFbuv5XQIypaRBycoupkdkx3kzhBg3NOMl2j3UJ9LS+6NRCufSLyq9KtqBFVPWmi4+KBoUbZkQoUiMHniZTcYYYqmylpjUgBdyVohu2s5HxOpDdiSWbNA3UlZR/lBBqw/CYyIkenRL9ZqjfVFgln0vJckiaTkIkvNYXba57WZRLku03xPHPo2sj9DamVLFuiFZ2pE2IfbkNOQnY32hBdXrR7RoLSzhrhYWQqRNYj/NB281MhsrZiVGJtuYpiw7E16RiajGIrYrxdGHooo0ZMdxQ3BJ8XErHfSrrnxcamlOB65Qu/K+bbLWTOXrxKDKU/JU3I/DoQDsjMgwmYyyFyGNkGj4ykgOXgET8bSf+AqAZ1DIhvBhwivu7/ATYxlvOTH50RAAAAAElFTkSuQmCC";
 
-			var alpha, valpha, z;
-			var beta, vbeta, x;
-			var gamma, vgamma, y;
-
 			var cameraTimer, audioTimer;
-			// var cameraTimer, imuTimer;
-
-			// setup event handler to capture the orientation event and store the most recent data in a variable
-
-			// if (window.DeviceOrientationEvent) {
-			// 	// Listen for the deviceorientation event and handle the raw data
-			// 	window.addEventListener(
-			// 		"deviceorientation",
-			// 		function (eventData) {
-			// 			// gamma is the left-to-right tilt in degrees, where right is positive
-			// 			gamma = eventData.gamma;
-
-			// 			// beta is the front-to-back tilt in degrees, where front is positive
-			// 			beta = eventData.beta;
-
-			// 			// alpha is the compass direction the device is facing in degrees
-			// 			alpha = eventData.alpha;
-			// 		},
-			// 		false
-			// 	);
-			// }
-
-			// setup event handler to capture the acceleration event and store the most recent data in a variable
-
-			// if (window.DeviceMotionEvent) {
-			// 	window.addEventListener("devicemotion", deviceMotionHandler, false);
-			// } else {
-			// 	window.alert("acceleration measurements Not supported.");
-			// }
-
-			// function deviceMotionHandler(eventData) {
-			// 	// Grab the acceleration from the results
-			// 	var acceleration = eventData.acceleration;
-			// 	x = acceleration.x;
-			// 	y = acceleration.y;
-			// 	z = acceleration.z;
-
-			// 	// Grab the rotation rate from the results
-			// 	var rotation = eventData.rotationRate;
-			// 	vgamma = rotation.gamma;
-			// 	vbeta = rotation.beta;
-			// 	valpha = rotation.alpha;
-			// }
 
 			// setup connection to the ROS server and prepare the topic
 			var ros;
-			// var ros = new ROSLIB.Ros({
-			// 	url: "wss://10.0.0.7:9090",
-			// });
-
-			// ros.on("connection", function () {
-			// 	console.log("Connected to websocket server.");
-			// });
-
-			// ros.on("error", function (error) {
-			// 	console.log("Error connecting to websocket server: ", error);
-			// 	window.alert("Error connecting to websocket server");
-			// });
-
-			// ros.on("close", function () {
-			// 	console.log("Connection to websocket server closed.");
-			// });
-
-			// var imageTopic = new ROSLIB.Topic({
-			// 	ros: ros,
-			// 	name: "/camera/image/compressed",
-			// 	messageType: "sensor_msgs/CompressedImage",
-			// });
-
-			// var audioTopic = new ROSLIB.Topic({
-			// 	ros: ros,
-			// 	name: "/audio",
-			// 	messageType: "std_msgs/Float32MultiArray",
-			// });
 			var imageTopic;
 			var audioTopic;
 
 			var audioMessage = new ROSLIB.Message({
 				data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 			});
-
-			// var imuTopic = new ROSLIB.Topic({
-			// 	ros: ros,
-			// 	name: "/gyro",
-			// 	messageType: "sensor_msgs/Imu",
-			// });
 		</script>
 	</head>
 
 	<!-- declare interface and the canvases that will display the video and the still shots -->
 	<body>
-		<video style="display: none" autoplay id="video"></video>
+		<video muted style="display: none" autoplay id="video"></video>
 		<canvas style="display: none" id="canvas"></canvas>
 		<button
 			id="startstop"
@@ -126,11 +45,12 @@
 			// Get the connect button
 			var connectButton = document.getElementById("connectButton");
 			var ip = document.getElementById("ip");
+			ip.value = "" + window.location.hostname;
 			var port = document.getElementById("port");
 
 			// request access to the video camera and start the video stream
 			var hasRunOnce = false,
-				video = document.querySelector("#video"),
+				// video = document.querySelector("#video"),
 				canvas = document.querySelector("#canvas"),
 				width = 640,
 				height, // calculated once video stream size is known
@@ -202,15 +122,14 @@
 			);
 
 			connectButton.addEventListener("click", function () {
-				// var dataURL = canvas.toDataURL("image/jpeg");
-				// var a = document.createElement("a");
-				// a.href = dataURL;
-				// a.download = "image.jpeg";
-				// a.click();
 				var ipaddr = ip.value;
+				if (ipaddr == "") {
+					// default to localhost if no ip address is provided
+					ipaddr = window.location.hostname;
+				}
 				var portVal = port.value;
 				var connUrl = "wss://" + ipaddr + ":" + portVal;
-				console.log(connUrl);
+				console.log("Attempting to connect to: " + connUrl);
 				ros = new ROSLIB.Ros({
 					url: connUrl,
 				});
@@ -257,57 +176,14 @@
 					format: "jpeg",
 					data: data.replace("data:image/jpeg;base64,", ""),
 				});
-				// console.log(imageMessage);
 
 				imageTopic.publish(imageMessage);
 			}
 
 			function publishaudio() {
-				console.log(audioMessage);
 				audioTopic.publish(audioMessage);
 			}
 
-			// function imusnapshot() {
-			// 	var beta_radian = (((beta + 360) / 360) * 2 * Math.PI) % (2 * Math.PI);
-			// 	var gamma_radian =
-			// 		(((gamma + 360) / 360) * 2 * Math.PI) % (2 * Math.PI);
-			// 	var alpha_radian =
-			// 		(((alpha + 360) / 360) * 2 * Math.PI) % (2 * Math.PI);
-			// 	var eurlerpose = new THREE.Euler(
-			// 		beta_radian,
-			// 		gamma_radian,
-			// 		alpha_radian
-			// 	);
-			// 	var quaternionpose = new THREE.Quaternion();
-			// 	quaternionpose.setFromEuler(eurlerpose);
-
-			// 	var imuMessage = new ROSLIB.Message({
-			// 		header: {
-			// 			frame_id: "world",
-			// 		},
-			// 		orientation: {
-			// 			x: quaternionpose.x,
-			// 			y: quaternionpose.y,
-			// 			z: quaternionpose.z,
-			// 			w: quaternionpose.w,
-			// 		},
-			// 		orientation_covariance: [0, 0, 0, 0, 0, 0, 0, 0, 0],
-			// 		angular_velocity: {
-			// 			x: vbeta,
-			// 			y: vgamma,
-			// 			z: valpha,
-			// 		},
-			// 		angular_velocity_covariance: [0, 0, 0, 0, 0, 0, 0, 0, 0],
-			// 		linear_acceleration: {
-			// 			x: x,
-			// 			y: y,
-			// 			z: z,
-			// 		},
-			// 		linear_acceleration_covariance: [0, 0, 0, 0, 0, 0, 0, 0, 0],
-			// 	});
-
-			// 	imuTopic.publish(imuMessage);
-			// }
 			// turning on and off the timer that triggers sending pictures and imu information several times a second
 			startstopicon.addEventListener(
 				"click",
