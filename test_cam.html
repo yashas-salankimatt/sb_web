@@ -61,34 +61,37 @@
 			// }
 
 			// setup connection to the ROS server and prepare the topic
-			var ros = new ROSLIB.Ros({
-				url: "wss://10.0.0.7:9090",
-			});
+			var ros;
+			// var ros = new ROSLIB.Ros({
+			// 	url: "wss://10.0.0.7:9090",
+			// });
 
-			ros.on("connection", function () {
-				console.log("Connected to websocket server.");
-			});
+			// ros.on("connection", function () {
+			// 	console.log("Connected to websocket server.");
+			// });
 
-			ros.on("error", function (error) {
-				console.log("Error connecting to websocket server: ", error);
-				window.alert("Error connecting to websocket server");
-			});
+			// ros.on("error", function (error) {
+			// 	console.log("Error connecting to websocket server: ", error);
+			// 	window.alert("Error connecting to websocket server");
+			// });
 
-			ros.on("close", function () {
-				console.log("Connection to websocket server closed.");
-			});
+			// ros.on("close", function () {
+			// 	console.log("Connection to websocket server closed.");
+			// });
 
-			var imageTopic = new ROSLIB.Topic({
-				ros: ros,
-				name: "/camera/image/compressed",
-				messageType: "sensor_msgs/CompressedImage",
-			});
+			// var imageTopic = new ROSLIB.Topic({
+			// 	ros: ros,
+			// 	name: "/camera/image/compressed",
+			// 	messageType: "sensor_msgs/CompressedImage",
+			// });
 
-			var audioTopic = new ROSLIB.Topic({
-				ros: ros,
-				name: "/audio",
-				messageType: "std_msgs/Float32MultiArray",
-			});
+			// var audioTopic = new ROSLIB.Topic({
+			// 	ros: ros,
+			// 	name: "/audio",
+			// 	messageType: "std_msgs/Float32MultiArray",
+			// });
+			var imageTopic;
+			var audioTopic;
 
 			var audioMessage = new ROSLIB.Message({
 				data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -113,12 +116,17 @@
 			<img id="startstopicon" src="" />
 		</button>
 		<br />
-		<button id="saveButton">Save Image</button>
+		<!-- two inputs, one for ip address and one for the port -->
+		<input id="ip" type="text" placeholder="IP Address" />
+		<input id="port" type="text" placeholder="Port" value="9090" />
+		<button id="connectButton">Connect to ROSbridge Server</button>
 
 		<script>
 			document.getElementById("startstopicon").setAttribute("src", RECORD_OFF);
-			// Get the save button
-			var saveButton = document.getElementById("saveButton");
+			// Get the connect button
+			var connectButton = document.getElementById("connectButton");
+			var ip = document.getElementById("ip");
+			var port = document.getElementById("port");
 
 			// request access to the video camera and start the video stream
 			var hasRunOnce = false,
@@ -193,12 +201,43 @@
 				false
 			);
 
-			saveButton.addEventListener("click", function () {
-				var dataURL = canvas.toDataURL("image/jpeg");
-				var a = document.createElement("a");
-				a.href = dataURL;
-				a.download = "image.jpeg";
-				a.click();
+			connectButton.addEventListener("click", function () {
+				// var dataURL = canvas.toDataURL("image/jpeg");
+				// var a = document.createElement("a");
+				// a.href = dataURL;
+				// a.download = "image.jpeg";
+				// a.click();
+				var ipaddr = ip.value;
+				var portVal = port.value;
+				var connUrl = "wss://" + ipaddr + ":" + portVal;
+				console.log(connUrl);
+				ros = new ROSLIB.Ros({
+					url: connUrl,
+				});
+				ros.on("connection", function () {
+					console.log("Connected to websocket server.");
+				});
+
+				ros.on("error", function (error) {
+					console.log("Error connecting to websocket server: ", error);
+					window.alert("Error connecting to websocket server");
+				});
+
+				ros.on("close", function () {
+					console.log("Connection to websocket server closed.");
+				});
+
+				imageTopic = new ROSLIB.Topic({
+					ros: ros,
+					name: "/camera/image/compressed",
+					messageType: "sensor_msgs/CompressedImage",
+				});
+
+				audioTopic = new ROSLIB.Topic({
+					ros: ros,
+					name: "/audio",
+					messageType: "std_msgs/Float32MultiArray",
+				});
 			});
 
 			// function that is run by trigger several times a second
@@ -274,7 +313,7 @@
 				"click",
 				function (ev) {
 					if (cameraTimer == null) {
-						ros.connect("ws://" + window.location.hostname + ":9090");
+						// ros.connect("ws://" + window.location.hostname + ":9090");
 						cameraOn();
 						cameraTimer = setInterval(function () {
 							takepicture();
