@@ -193,10 +193,10 @@
 						cameraOn();
 						cameraTimer = setInterval(function () {
 							takepicture();
-						}, 250); // publish an image 4 times per second
+						}, 100); // publish an image 4 times per second
 						audioTimer = setInterval(function () {
 							publishaudio();
-						}, 160); // publish an audio 62.5 times per second
+						}, 16); // publish an audio 62.5 times per second
 						// imuTimer = setInterval(function () {
 						// 	imusnapshot();
 						// }, 100); // publish an IMU message 10 times per second
