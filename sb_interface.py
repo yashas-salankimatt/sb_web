@@ -5,7 +5,7 @@ from moveit_msgs.msg import ExecuteTrajectoryActionGoal
 goalPos = []
 twist = TwistStamped()
 
-# helped function to convert input from rads to degrees
+# helper function to convert input from rads to degrees
 def degrees(x):
     return x * 180 / 3.141592653589793
 

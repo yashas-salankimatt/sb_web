@@ -98,6 +98,12 @@ rosrun rosserial_python serial_node.py /dev/ttyUSB0
 
 ![rosserial-success](images/rosserial-success.png "Successful connection to microcontroller")
 
+To test that the microcontroller is receiving commands, use the following python script to send joint values to Survivor Buddy and make sure that it is moving.
+
+```sh
+sb_test_joint_positions.py
+```
+
 ## Survivor Buddy Hardware Interface Connection
 
 To finish the connection between MoveIt and the Survivor Buddy hardware, there is an interface script that translates the messages coming out of MoveIt to the correct message format that the microcontroller can understand.
