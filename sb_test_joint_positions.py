@@ -1,6 +1,5 @@
 import rospy
 from geometry_msgs.msg import TwistStamped
-from moveit_msgs.msg import ExecuteTrajectoryActionGoal
 
 twist = TwistStamped()
 
