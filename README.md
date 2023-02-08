@@ -6,23 +6,38 @@ Make sure you have npm and node installed.
 Useful link here: https://medium.com/@iam_vinojan/how-to-install-node-js-and-npm-using-node-version-manager-nvm-143165b16ce1
 
 Install http-server with the following command
-`npm install -g http-server`
+
+```sh
+npm install -g http-server
+```
 
 Then,
-`cd /to/sb_web/`
+
+```sh
+cd /to/sb_web/
+```
 
 And run
-`http-server -S -C cert.pem -o --key key.pem`
+
+```sh
+http-server -S -C cert.pem -o -K key.pem
+```
 
 ![http-server-launch-image](images/http-server-launch.png "Output of http-server command")
 
 ## ROSbridge suite
 
 Install ROSbridge suite with:
-`sudo apt install -y ros-noetic-rosbridge-suite`
+
+```sh
+sudo apt install -y ros-noetic-rosbridge-suite
+```
 
 Then,
-`cd /to/sb_web/`
+
+```sh
+cd /to/sb_web/
+```
 
 Open rb_server.launch.
 
@@ -32,7 +47,10 @@ Also change the certfile and keyfile paths to be the absolute path location to t
 ![launchfile-args-to-change](images/launchfile-args-to-change.png "Change the address, certfile, and keyfile args")
 
 And run
-`roslauch rb_server.launch`
+
+```sh
+roslaunch rb_server.launch
+```
 
 ![rosbridge-launch](images/rosbridge-launch.png "Output of launching the rosbridge")
 
@@ -57,3 +75,41 @@ Then navigate back to the IP address and port of the http-server and the sb_head
 Then click connect to ROSbridge server, making sure the IP address and port in the fields are the correct address and port for the rosbridge server. Once connected, click on the record button to start transmitting the camera and audio data wirelessly to the instance of ROS running on your computer.
 
 ![rosbridge-success](images/rosbridge-client-connected.png "Successfully connected to rosbridge server")
+
+# Survivor Buddy Hardware Connection Setup
+
+## ROSserial Connection
+
+The microcontroller onboard the Survivor Buddy uses the rosserial library to communicate with ROS and send messages back and forth.
+
+In order to connect to get the microcontroller up and running, first plug in the USB cable from the Survivor Buddy and make sure it is being detected by running the command
+
+```sh
+ls /dev/ttyUSB*
+```
+
+If the microcontroller is properly connected, you should see /dev/ttyUSB0 as the output of the previous command.
+
+To connect the ROSserial node to your computer, run the following command
+
+```sh
+rosrun rosserial_python serial_node.py /dev/ttyUSB0
+```
+
+![rosserial-success](images/rosserial-success.png "Successful connection to microcontroller")
+
+## Survivor Buddy Hardware Interface Connection
+
+To finish the connection between MoveIt and the Survivor Buddy hardware, there is an interface script that translates the messages coming out of MoveIt to the correct message format that the microcontroller can understand.
+
+To start this node, simply execute the interface layer script with
+
+```sh
+python3 sb_interface.py
+```
+
+If successful, there will be no output, just a lack of error messages.
+
+You should now be receiving the camera data from the phone in the /camera/image/compressed topic and be receiving the audio data from the phone in the /audio topic. You should also be connected to the Survivor Buddy hardware so you can preview your actions in MoveIt and then see them executed on the physical robot.
+
+Contact me at yashas.salankimatt@tamu.edu or the TA: Sheelabhadra Dey (sheelabhadra@tamu.edu) if you have any questions about these instructions.
