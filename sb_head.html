@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 	<head>
+		<link rel="stylesheet" href="https://unpkg.com/css-baseline/css/4.css"> 
 		<script src="https://static.robotwebtools.org/EventEmitter2/current/eventemitter2.min.js"></script>
 		<script src="https://static.robotwebtools.org/roslibjs/current/roslib.min.js"></script>
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r71/three.min.js"></script>
@@ -37,16 +38,26 @@
 		<br />
 		<!-- two inputs, one for ip address and one for the port -->
 		<input id="ip" type="text" placeholder="IP Address" />
-		<input id="port" type="text" placeholder="Port" value="9093" />
+		<input id="port" type="text" placeholder="Port" value="8080" />
 		<button id="connectButton">Connect to ROSbridge Server</button>
-
+		<span id="messageLog" style="padding: 1rem; position: fixed; right: 0; top: 0; height: 100vh; overflow: auto; width: 20rem; background-color: whitesmoke; border: 2px gray solid;">
+			(message log)
+		</span>
 		<script>
 			document.getElementById("startstopicon").setAttribute("src", RECORD_OFF);
 			// Get the connect button
-			var connectButton = document.getElementById("connectButton");
-			var ip = document.getElementById("ip");
+			var connectButton  = document.getElementById("connectButton");
+			var messageElement = document.getElementById("messageLog");
+			var ip             = document.getElementById("ip");
+			var port           = document.getElementById("port");
+            
+            // create a UI for logging messages
+			const sendMessage = (message)=>{
+				messageElement.innerHTML += `<br>...<br>...<br>${message}`;
+				messageElement.scrollTop = messageElement.scrollHeight;
+			}
+            
 			ip.value = "" + window.location.hostname;
-			var port = document.getElementById("port");
 
 			// request access to the video camera and start the video stream
 			var hasRunOnce = false,
@@ -57,45 +68,55 @@
 				cameraStream;
 
 			async function cameraOn() {
-				try {
-					cameraStream = await navigator.mediaDevices.getUserMedia({
-						video: true,
-						audio: true,
-					});
-					video.srcObject = cameraStream;
-					video.play();
-					video.onloadedmetadata = function (e) {
-						height = video.videoHeight / (video.videoWidth / width);
-						console.log(height, width);
-						video.setAttribute("width", width);
-						video.setAttribute("height", height);
-						canvas.setAttribute("width", width);
-						canvas.setAttribute("height", height);
-					};
-
-					var audioCtx = new (window.AudioContext ||
-						window.webkitAudioContext)();
-					var source = audioCtx.createMediaStreamSource(cameraStream);
-
-					var bufferSize = 2048;
-					var recorder = audioCtx.createScriptProcessor(bufferSize, 1, 1);
-
-					recorder.onaudioprocess = function (e) {
-						var input = e.inputBuffer.getChannelData(0);
-						var audioData = new Float32Array(input);
-						var msg = new ROSLIB.Message({
-							data: Array.from(audioData),
+				if (!navigator.mediaDevices) {
+					sendMessage(`Error: check the URL<br>Make sure it has "https" and not "http"`)
+				} else {
+					
+					try {
+						cameraStream = await navigator.mediaDevices.getUserMedia({
+							video: true,
+							audio: true,
 						});
-						// console.log(msg);
-						audioMessage = msg;
-						// audioTopic.publish(audioMessage);
-					};
+						video.srcObject = cameraStream;
+						video.play();
+						video.onloadedmetadata = function (e) {
+							height = video.videoHeight / (video.videoWidth / width);
+							console.log(height, width);
+							video.setAttribute("width", width);
+							video.setAttribute("height", height);
+							canvas.setAttribute("width", width);
+							canvas.setAttribute("height", height);
+						};
+					} catch (error) {
+						sendMessage(`Looks like there was an issue connecting to the camera. Make sure this browser can actually connect to your camera (for example try logging into Zoom and using "Your Room" and try turning on the camera)`)
+						throw error
+					}
+					
+					try {
+						var audioCtx = new (window.AudioContext ||
+							window.webkitAudioContext)();
+						var source = audioCtx.createMediaStreamSource(cameraStream);
 
-					source.connect(recorder);
-					recorder.connect(audioCtx.destination);
-				} catch (err) {
-					console.log("The following error occurred: " + err.name);
-					console.error(err);
+						var bufferSize = 2048;
+						var recorder = audioCtx.createScriptProcessor(bufferSize, 1, 1);
+
+						recorder.onaudioprocess = function (e) {
+							var input = e.inputBuffer.getChannelData(0);
+							var audioData = new Float32Array(input);
+							var msg = new ROSLIB.Message({
+								data: Array.from(audioData),
+							});
+							// console.log(msg);
+							audioMessage = msg;
+							// audioTopic.publish(audioMessage);
+						};
+
+						source.connect(recorder);
+						recorder.connect(audioCtx.destination);
+					} catch (error) {
+						sendMessage(`Looks like there was an issue connecting to the microphone. Make sure this browser can actually connect to your microphone (for example try logging into Zoom and using "Your Room" and try turning on your mic)`)
+						throw error
+					}
 				}
 			}
 
@@ -126,20 +147,28 @@
 				if (ipaddr == "") {
 					// default to localhost if no ip address is provided
 					ipaddr = window.location.hostname;
+					if (ipaddr == "localhost") {
+						ipaddr = "127.0.0.1"
+					}
+					if (ipaddr == "127.0.0.1") {
+						window.alert(`Note: your connection should be something other than localhost (aka 127.0.0.1).\n\nI'll still let you try with localhost but just note that the public facing address should be used instead.`)
+					}
 				}
 				var portVal = port.value;
-				var connUrl = "wss://" + ipaddr + ":" + portVal;
+				const baseValue = ipaddr + ":" + portVal
+				var connUrl = "wss://" + baseValue;
 				console.log("Attempting to connect to: " + connUrl);
 				ros = new ROSLIB.Ros({
 					url: connUrl,
 				});
 				ros.on("connection", function () {
 					console.log("Connected to websocket server.");
+					sendMessage("Success!")
 				});
 
 				ros.on("error", function (error) {
 					console.log("Error connecting to websocket server: ", error);
-					window.alert("Error connecting to websocket server");
+					sendMessage(`1. Make sure <code>roslaunch rb_server.launch</code> is running<br>2. Try opening this in a new tab:<br><a href="https://${baseValue}">https://${baseValue}</a><br>3. Click Advanced -> Accept Risk and Continue<br>4.Then re-run this test<br>`)
 				});
 
 				ros.on("close", function () {
@@ -157,31 +186,36 @@
 					name: "/audio",
 					messageType: "std_msgs/Float32MultiArray",
 				});
+				
 			});
 
 			// function that is run by trigger several times a second
 			// takes snapshot of video to canvas, encodes the images as base 64 and sends it to the ROS topic
 			function takepicture() {
-				canvas.width = width;
-				canvas.height = height;
+				if (imageTopic) {
+					canvas.width = width;
+					canvas.height = height;
 
-				canvas
-					.getContext("2d")
-					.drawImage(video, 0, 0, canvas.width, canvas.height);
+					canvas
+						.getContext("2d")
+						.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-				var data = canvas.toDataURL("image/jpeg");
-				var a = document.createElement("a");
-				a.href = data;
-				var imageMessage = new ROSLIB.Message({
-					format: "jpeg",
-					data: data.replace("data:image/jpeg;base64,", ""),
-				});
+					var data = canvas.toDataURL("image/jpeg");
+					var a = document.createElement("a");
+					a.href = data;
+					var imageMessage = new ROSLIB.Message({
+						format: "jpeg",
+						data: data.replace("data:image/jpeg;base64,", ""),
+					});
 
-				imageTopic.publish(imageMessage);
+					imageTopic.publish(imageMessage);
+				}
 			}
 
 			function publishaudio() {
-				audioTopic.publish(audioMessage);
+				if (audioTopic) {
+					audioTopic.publish(audioMessage);
+				}
 			}
 
 			// turning on and off the timer that triggers sending pictures and imu information several times a second
