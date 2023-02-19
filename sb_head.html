@@ -2,6 +2,10 @@
 <html>
 	<head>
 		<link rel="stylesheet" href="https://unpkg.com/css-baseline/css/4.css"> 
+		<!-- Compiled and minified CSS -->
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+		<!-- Compiled and minified JavaScript -->
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
 		<script src="https://static.robotwebtools.org/EventEmitter2/current/eventemitter2.min.js"></script>
 		<script src="https://static.robotwebtools.org/roslibjs/current/roslib.min.js"></script>
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r71/three.min.js"></script>
@@ -27,46 +31,65 @@
 
 	<!-- declare interface and the canvases that will display the video and the still shots -->
 	<body>
+		<div style="display: flex; position: relative; flex-direction: column; width: 26rem; padding: 2rem; box-shadow: 0 4px 5px 0 rgba(0,0,0,0.14), 0 1px 10px 0 rgba(0,0,0,0.12), 0 2px 4px -1px rgba(0,0,0,0.3); margin: 1rem; border-radius: 12px;">
+			<!-- <button
+				id="startstop"
+				style="outline-width: 0; background-color: transparent; border: none"
+			>
+				<img id="startstopicon" src="" />
+			</button> -->
+			<div class="switch" style="margin-bottom: 2rem; width: 100%; display: flex; justify-content: space-between; align-items: center;">
+				<h5>
+					Activate Camera
+				</h5>
+				<label>
+					<input id="startstopicon" type="checkbox" value="">
+					<span class="lever"></span>
+				</label>
+			</div>
+			<!-- two inputs, one for ip address and one for the port -->
+			<label for="ip">IP Address</label>
+			<input id="ip" type="text" placeholder="IP Address" />
+			
+			<label for="port">Port</label>
+			<input id="port" type="text" placeholder="Port" value="8080" />
+			
+			<button id="connectButton" class="btn-large waves-effect waves-light" style="margin-top: 1rem;">
+				Connect to ROSbridge Server
+			</button>
+		</div>
+		
 		<video muted style="display: none" autoplay id="video"></video>
 		<canvas style="display: none" id="canvas"></canvas>
-		<button
-			id="startstop"
-			style="outline-width: 0; background-color: transparent; border: none"
-		>
-			<img id="startstopicon" src="" />
-		</button>
 		<br />
-		<!-- two inputs, one for ip address and one for the port -->
-		<input id="ip" type="text" placeholder="IP Address" />
-		<input id="port" type="text" placeholder="Port" value="8080" />
-		<button id="connectButton">Connect to ROSbridge Server</button>
-		<span id="messageLog" style="padding: 1rem; position: fixed; right: 0; top: 0; height: 100vh; overflow: auto; width: 20rem; background-color: whitesmoke; border: 2px gray solid;">
+		
+		<span id="messageLog" style="padding: 1rem; position: fixed; right: 0; top: 0; height: 100vh; overflow: auto; width: 20rem; background-color: whitesmoke; border-left: 2px gray solid; box-shadow: 0 4px 5px 0 rgba(0,0,0,0.14), 0 1px 10px 0 rgba(0,0,0,0.12), 0 2px 4px -1px rgba(0,0,0,0.3);">
 			(message log)
 		</span>
+		
 		<script>
-			document.getElementById("startstopicon").setAttribute("src", RECORD_OFF);
-			// Get the connect button
-			var connectButton  = document.getElementById("connectButton");
-			var messageElement = document.getElementById("messageLog");
-			var ip             = document.getElementById("ip");
-			var port           = document.getElementById("port");
-            
-            // create a UI for logging messages
+			// grab the elements
+			var startstopiconElement = document.getElementById("startstopicon")
+			var connectButton        = document.getElementById("connectButton");
+			var messageElement       = document.getElementById("messageLog");
+			var ip                   = document.getElementById("ip");
+			var port 				 = document.getElementById("port");
+			var canvas 				 = document.querySelector("#canvas")
+			
+			// startstopiconElement.setAttribute("src", RECORD_OFF);
 			const sendMessage = (message)=>{
-				messageElement.innerHTML += `<br>...<br>...<br>${message}`;
-				messageElement.scrollTop = messageElement.scrollHeight;
+				messageElement.innerHTML += `<br>...<br>...<br>${message}`
+				messageElement.scrollTop = messageElement.scrollHeight
 			}
-            
 			ip.value = "" + window.location.hostname;
-
-			// request access to the video camera and start the video stream
+			
 			var hasRunOnce = false,
 				// video = document.querySelector("#video"),
-				canvas = document.querySelector("#canvas"),
 				width = 640,
 				height, // calculated once video stream size is known
 				cameraStream;
 
+			// request access to the video camera and start the video stream
 			async function cameraOn() {
 				if (!navigator.mediaDevices) {
 					sendMessage(`Error: check the URL<br>Make sure it has "https" and not "http"`)
@@ -114,7 +137,7 @@
 						source.connect(recorder);
 						recorder.connect(audioCtx.destination);
 					} catch (error) {
-						sendMessage(`Looks like there was an issue connecting to the microphone. Make sure this browser can actually connect to your microphone (for example try logging into Zoom and using "Your Room" and try turning on your mic)`)
+						sendMessage(`Looks like there was an issue connecting to the microphone. Make sure this browser can actually connect to your camera (for example try logging into Zoom and using "Your Room" and try turning on the camera)`)
 						throw error
 					}
 				}
@@ -219,7 +242,7 @@
 			}
 
 			// turning on and off the timer that triggers sending pictures and imu information several times a second
-			startstopicon.addEventListener(
+			startstopiconElement.addEventListener(
 				"click",
 				function (ev) {
 					if (cameraTimer == null) {
@@ -234,17 +257,11 @@
 						// imuTimer = setInterval(function () {
 						// 	imusnapshot();
 						// }, 100); // publish an IMU message 10 times per second
-						document
-							.getElementById("startstopicon")
-							.setAttribute("src", RECORD_ON);
 					} else {
 						ros.close();
 						cameraOff();
 						clearInterval(cameraTimer);
 						// clearInterval(imuTimer);
-						document
-							.getElementById("startstopicon")
-							.setAttribute("src", RECORD_OFF);
 						cameraTimer = null;
 						// imuTimer = null;
 					}
