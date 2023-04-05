@@ -4,17 +4,22 @@ from geometry_msgs.msg import TwistStamped
 twist = TwistStamped()
 
 # helper function to convert input from rads to degrees
+
+
 def degrees(x):
     return x * 180 / 3.141592653589793
 
 # main function
+
+
 def main():
     print("Joint positions are in degrees and input needs to be in the following order: ")
     print("joint1 joint2 joint3 joint4\n")
     print("Enter 'q' or 'quit' or 'exit' to quit\n")
     pub = rospy.Publisher('/sb_cmd_state', TwistStamped, queue_size=10)
+    # pub = rospy.Publisher('/sb_0_cmd_state', TwistStamped, queue_size=10)
     rospy.init_node('test_joint', anonymous=True)
-    rate = rospy.Rate(10) # 10hz
+    rate = rospy.Rate(10)  # 10hz
     while not rospy.is_shutdown():
         in_val = input("\nEnter joint positions: ")
         if in_val.lower() == 'q' or in_val.lower() == 'quit' or in_val.lower() == 'exit':
